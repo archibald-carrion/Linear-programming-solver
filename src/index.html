@@ -7,78 +7,167 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
         }
         form {
-            margin-bottom: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
         }
         label {
             display: block;
-            margin-top: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-        input, textarea {
-            width: 100%;
+        input[type="number"], input[type="text"] {
+            width: 60px;
+            padding: 5px;
+            margin-right: 5px;
+        }
+        select {
             padding: 5px;
         }
         button {
-            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
             padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
         }
-        .result {
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
             margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .equation {
+            margin-bottom: 10px;
+        }
+        .equation input {
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
     <h1>Linear Programming Solver</h1>
-
-    <form id="lp-form">
-        <label for="objective">Objective Function Coefficients (Comma-separated):</label>
-        <input type="text" id="objective" required>
-
-        <label for="lhs_ineq">Left-hand side of Inequalities (Rows comma-separated, each row semicolon-separated):</label>
-        <textarea id="lhs_ineq" required></textarea>
-
-        <label for="rhs_ineq">Right-hand side of Inequalities (Comma-separated):</label>
-        <input type="text" id="rhs_ineq" required>
-
-        <label for="lhs_eq">Left-hand side of Equalities (Optional, same format as inequalities):</label>
-        <textarea id="lhs_eq"></textarea>
-
-        <label for="rhs_eq">Right-hand side of Equalities (Optional, comma-separated):</label>
-        <input type="text" id="rhs_eq">
-
-        <label for="bounds">Variable bounds (Optional, each bound as [min, max], rows comma-separated):</label>
-        <textarea id="bounds"></textarea>
-
+    <form id="lpForm">
+        <div class="form-group">
+            <label for="numVariables">Number of Variables:</label>
+            <input type="number" id="numVariables" min="1" value="2" required>
+            <button type="button" id="updateVariables">Update</button>
+        </div>
+        <div class="form-group">
+            <label>Objective Function:</label>
+            <div id="objectiveFunction"></div>
+            <select id="objectiveType">
+                <option value="max">Maximize</option>
+                <option value="min">Minimize</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Constraints:</label>
+            <div id="constraints"></div>
+            <button type="button" id="addConstraint">Add Constraint</button>
+        </div>
         <button type="submit">Solve</button>
     </form>
-
-    <div class="result">
-        <h2>Result</h2>
-        <pre id="result-output"></pre>
-    </div>
+    <div id="result"></div>
 
     <script>
-        document.getElementById('lp-form').addEventListener('submit', function(event) {
-            event.preventDefault();
+        let numVariables = 2;
 
-            const objective = document.getElementById('objective').value.split(',').map(Number);
-            const lhs_ineq = document.getElementById('lhs_ineq').value.split(';').map(row => row.split(',').map(Number));
-            const rhs_ineq = document.getElementById('rhs_ineq').value.split(',').map(Number);
-            const lhs_eq = document.getElementById('lhs_eq').value ? document.getElementById('lhs_eq').value.split(';').map(row => row.split(',').map(Number)) : null;
-            const rhs_eq = document.getElementById('rhs_eq').value ? document.getElementById('rhs_eq').value.split(',').map(Number) : null;
-            const bounds = document.getElementById('bounds').value ? document.getElementById('bounds').value.split(';').map(row => JSON.parse(row)) : null;
+        function updateFormFields() {
+            const objectiveFunction = document.getElementById('objectiveFunction');
+            const constraints = document.getElementById('constraints');
+            
+            objectiveFunction.innerHTML = '';
+            for (let i = 0; i < numVariables; i++) {
+                objectiveFunction.innerHTML += `
+                    <input type="number" step="any" required>x<sub>${i+1}</sub>
+                    ${i < numVariables - 1 ? '+' : ''}
+                `;
+            }
 
+            constraints.innerHTML = '';
+            addConstraint();
+        }
+
+        function addConstraint() {
+            const constraints = document.getElementById('constraints');
+            const newConstraint = document.createElement('div');
+            newConstraint.className = 'equation';
+            let constraintHtml = '';
+            for (let i = 0; i < numVariables; i++) {
+                constraintHtml += `
+                    <input type="number" step="any" required>x<sub>${i+1}</sub>
+                    ${i < numVariables - 1 ? '+' : ''}
+                `;
+            }
+            constraintHtml += `
+                <select>
+                    <option value="<=">≤</option>
+                    <option value="=">
+
+=</option>
+                    <option value=">=">≥</option>
+                </select>
+                <input type="number" step="any" required>
+            `;
+            newConstraint.innerHTML = constraintHtml;
+            constraints.appendChild(newConstraint);
+        }
+
+        document.getElementById('updateVariables').addEventListener('click', function() {
+            numVariables = parseInt(document.getElementById('numVariables').value);
+            updateFormFields();
+        });
+
+        document.getElementById('addConstraint').addEventListener('click', addConstraint);
+
+        document.getElementById('lpForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const objective = Array.from(document.getElementById('objectiveFunction').getElementsByTagName('input')).map(input => parseFloat(input.value));
+            const objectiveType = document.getElementById('objectiveType').value;
+            const constraints = Array.from(document.getElementById('constraints').getElementsByClassName('equation')).map(eq => {
+                const inputs = eq.getElementsByTagName('input');
+                const coefficients = Array.from(inputs).slice(0, -1).map(input => parseFloat(input.value));
+                const relation = eq.getElementsByTagName('select')[0].value;
+                const rhs = parseFloat(inputs[inputs.length - 1].value);
+                return { coefficients, relation, rhs };
+            });
+
+            // Prepare data for the backend
             const data = {
-                objective: objective,
-                lhs_ineq: lhs_ineq,
-                rhs_ineq: rhs_ineq,
-                lhs_eq: lhs_eq,
-                rhs_eq: rhs_eq,
-                bounds: bounds
+                objective: objectiveType === 'min' ? objective : objective.map(x => -x), // Negate for maximization
+                lhs_ineq: constraints.filter(c => c.relation !== '=').map(c => c.relation === '>=' ? c.coefficients.map(x => -x) : c.coefficients),
+                rhs_ineq: constraints.filter(c => c.relation !== '=').map(c => c.relation === '>=' ? -c.rhs : c.rhs)
             };
 
+            // Only include equality constraints if they exist
+            const equalityConstraints = constraints.filter(c => c.relation === '=');
+            if (equalityConstraints.length > 0) {
+                data.lhs_eq = equalityConstraints.map(c => c.coefficients);
+                data.rhs_eq = equalityConstraints.map(c => c.rhs);
+            }
+
+            // Send data to the backend
             fetch('http://127.0.0.1:5000/solve', {
                 method: 'POST',
                 headers: {
@@ -88,10 +177,24 @@
             })
             .then(response => response.json())
             .then(result => {
-                const output = `Success: ${result.status}\nMessage: ${result.message}\nObjective Value: ${result.objective_value}\nVariable Values: ${result.variable_values}`;
-                document.getElementById('result-output').textContent = output;
+                if (result.status) {
+                    let output = `Optimization successful!\n`;
+                    output += `Objective value: ${objectiveType === 'min' ? result.objective_value : -result.objective_value}\n`;
+                    output += `Variable values:\n`;
+                    result.variable_values.forEach((value, index) => {
+                        output += `x${index + 1} = ${value.toFixed(4)}\n`;
+                    });
+                    document.getElementById('result').innerHTML = `<pre>${output}</pre>`;
+                } else {
+                    document.getElementById('result').innerHTML = `<p>Error: ${result.message}</p>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
             });
         });
+
+        updateFormFields();
     </script>
 </body>
 </html>
