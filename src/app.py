@@ -13,11 +13,23 @@ def solve():
     b = data.get('rhs_ineq')  # Coefficients of the right-hand side of the inequality constraints
     A_eq = data.get('lhs_eq')  # Coefficients of the left-hand side of the equality constraints
     b_eq = data.get('rhs_eq')  # Coefficients of the right-hand side of the equality constraints
-    bounds = data.get('bounds')  # Variable bounds
+
+    # Prepare kwargs for linprog
+    kwargs = {
+        'c': c,
+        'A_ub': A,
+        'b_ub': b,
+        'method': 'highs'
+    }
+
+    # Only include equality constraints if they exist
+    if A_eq and b_eq:
+        kwargs['A_eq'] = A_eq
+        kwargs['b_eq'] = b_eq
 
     try:
-        # Solve the linear programming problem with the 'highs' method
-        result = linprog(c, A_ub=A, b_ub=b, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method='highs')
+        # Solve the linear programming problem
+        result = linprog(**kwargs)
 
         if result.success:
             # Return success and solution
@@ -42,4 +54,3 @@ def solve():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
