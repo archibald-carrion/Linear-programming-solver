@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Programming Solver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 5px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+        }
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Linear Programming Solver</h1>
+
+    <form id="lp-form">
+        <label for="objective">Objective Function Coefficients (Comma-separated):</label>
+        <input type="text" id="objective" required>
+
+        <label for="lhs_ineq">Left-hand side of Inequalities (Rows comma-separated, each row semicolon-separated):</label>
+        <textarea id="lhs_ineq" required></textarea>
+
+        <label for="rhs_ineq">Right-hand side of Inequalities (Comma-separated):</label>
+        <input type="text" id="rhs_ineq" required>
+
+        <label for="lhs_eq">Left-hand side of Equalities (Optional, same format as inequalities):</label>
+        <textarea id="lhs_eq"></textarea>
+
+        <label for="rhs_eq">Right-hand side of Equalities (Optional, comma-separated):</label>
+        <input type="text" id="rhs_eq">
+
+        <label for="bounds">Variable bounds (Optional, each bound as [min, max], rows comma-separated):</label>
+        <textarea id="bounds"></textarea>
+
+        <button type="submit">Solve</button>
+    </form>
+
+    <div class="result">
+        <h2>Result</h2>
+        <pre id="result-output"></pre>
+    </div>
+
+    <script>
+        document.getElementById('lp-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const objective = document.getElementById('objective').value.split(',').map(Number);
+            const lhs_ineq = document.getElementById('lhs_ineq').value.split(';').map(row => row.split(',').map(Number));
+            const rhs_ineq = document.getElementById('rhs_ineq').value.split(',').map(Number);
+            const lhs_eq = document.getElementById('lhs_eq').value ? document.getElementById('lhs_eq').value.split(';').map(row => row.split(',').map(Number)) : null;
+            const rhs_eq = document.getElementById('rhs_eq').value ? document.getElementById('rhs_eq').value.split(',').map(Number) : null;
+            const bounds = document.getElementById('bounds').value ? document.getElementById('bounds').value.split(';').map(row => JSON.parse(row)) : null;
+
+            const data = {
+                objective: objective,
+                lhs_ineq: lhs_ineq,
+                rhs_ineq: rhs_ineq,
+                lhs_eq: lhs_eq,
+                rhs_eq: rhs_eq,
+                bounds: bounds
+            };
+
+            fetch('http://127.0.0.1:5000/solve', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                const output = `Success: ${result.status}\nMessage: ${result.message}\nObjective Value: ${result.objective_value}\nVariable Values: ${result.variable_values}`;
+                document.getElementById('result-output').textContent = output;
+            });
+        });
+    </script>
+</body>
+</html>
