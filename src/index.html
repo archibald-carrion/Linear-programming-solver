@@ -96,7 +96,7 @@
         function updateFormFields() {
             const objectiveFunction = document.getElementById('objectiveFunction');
             const constraints = document.getElementById('constraints');
-            
+
             objectiveFunction.innerHTML = '';
             for (let i = 0; i < numVariables; i++) {
                 objectiveFunction.innerHTML += `
@@ -168,7 +168,8 @@
             }
 
             // Send data to the backend
-            fetch('http://127.0.0.1:5000/solve', {
+            // using 'http://127.0.0.1:5000/solve' when working in local machine
+            fetch('/solve', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

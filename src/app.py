@@ -1,9 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from scipy.optimize import linprog
 from flask_cors import CORS
+import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+@app.route('/')
+def index():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/solve', methods=['POST'])
 def solve():
@@ -30,7 +35,6 @@ def solve():
     try:
         # Solve the linear programming problem
         result = linprog(**kwargs)
-
         if result.success:
             # Return success and solution
             return jsonify({
@@ -53,4 +57,4 @@ def solve():
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
