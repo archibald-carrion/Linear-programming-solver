@@ -57,4 +57,6 @@ def solve():
         }), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    # change host to '0.0.0.0' to make the server publicly available
+    # with value '127.0.0.1' the server is only available locally
+    app.run(host='127.0.0.1', port=int(os.environ.get('PORT', 8080)))
