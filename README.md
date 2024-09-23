@@ -25,4 +25,11 @@ Then you can access the application in your browser at the address `http://local
 - [ ] Add tests
 - [ ] Add more information to the README
 - [ ] Add a better UI
-- [ ] Add a way to add constraints
+- [x] Add a way to add constraints
+- [ ] Add a way to delete constraints (like a trash icon)
+- [ ] Add a way to add constants to the constraints & objective function
+- [ ] Add a dark mode to the UI
+
+## Screenshots
+![image](/documentation/images/linear_programming_solver.PNG)
+
