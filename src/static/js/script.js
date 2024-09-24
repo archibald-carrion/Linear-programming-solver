@@ -70,7 +70,7 @@ let numVariables = 2;
             // Only include equality constraints if they exist
             const equalityConstraints = constraints.filter(c => c.relation === '=');
             if (equalityConstraints.length > 0) {
-                data.lhs_eq = equalityConstraints.map(c => c.coefficients);
+                data.lhs_eq = equalityConstraints.map(c => c.coefficients); 
                 data.rhs_eq = equalityConstraints.map(c => c.rhs);
             }
 
@@ -85,8 +85,9 @@ let numVariables = 2;
             })
             .then(response => response.json())
             .then(result => {
+                // Display the result of the optimization
                 if (result.status) {
-                    let output = `Optimization successful!\n`;
+                    let output = `${result.message}\n`;
                     output += `Objective value: ${objectiveType === 'min' ? result.objective_value : -result.objective_value}\n`;
                     output += `Variable values:\n`;
                     result.variable_values.forEach((value, index) => {
@@ -94,10 +95,12 @@ let numVariables = 2;
                     });
                     document.getElementById('result').innerHTML = `<pre>${output}</pre>`;
                 } else {
-                    document.getElementById('result').innerHTML = `<p>Error: ${result.message}</p>`;
+                    document.getElementById('result').innerHTML = `<p>Error: ${result.message}</p><p>Details: ${result.details}</p>`;
                 }
             })
             .catch(error => {
+                // In case of an error from the backend display the error message
+                console.error('Error:', error);
                 document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
             });
         });
